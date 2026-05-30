@@ -428,9 +428,10 @@
 
         <!-- 照片容器 -->
         <div class="photo-container">
-            <img src="https://github.com/GAOYUAN200/our-story/blob/main/1ee8ea1eedae471666d7a9b6961ce1b7.jpg?raw=true" 
+            <img id="couplePhoto" 
                  alt="陆韦彬和高原的合影" 
-                 class="couple-photo">
+                 class="couple-photo"
+                 onerror="handleImageError()">
         </div>
 
         <!-- 标题 -->
@@ -472,6 +473,31 @@
     </div>
 
     <script>
+        // 国内 CDN 镜像列表（支持中国访问）
+        const imageUrls = [
+            'https://ghproxy.com/https://raw.githubusercontent.com/GAOYUAN200/our-story/main/1ee8ea1eedae471666d7a9b6961ce1b7.jpg',
+            'https://raw.fastgit.org/GAOYUAN200/our-story/main/1ee8ea1eedae471666d7a9b6961ce1b7.jpg',
+            'https://raw.githubusercontent.com/GAOYUAN200/our-story/main/1ee8ea1eedae471666d7a9b6961ce1b7.jpg',
+            'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"%3E%3Crect fill="%23432d6e" width="240" height="240"/%3E%3Ccircle cx="120" cy="120" r="100" fill="%23ec4899" opacity="0.3"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23fff" font-size="80" font-weight="bold"%3E♥%3C/text%3E%3C/svg%3E'
+        ];
+
+        let currentImageIndex = 0;
+
+        function loadImage() {
+            const img = document.getElementById('couplePhoto');
+            if (currentImageIndex < imageUrls.length) {
+                img.src = imageUrls[currentImageIndex];
+            }
+        }
+
+        function handleImageError() {
+            currentImageIndex++;
+            if (currentImageIndex < imageUrls.length) {
+                console.log('尝试下一个镜像源...');
+                loadImage();
+            }
+        }
+
         // 防止缩放
         document.addEventListener('touchstart', function(event) {
             if (event.touches.length > 1) {
@@ -503,6 +529,7 @@
         }
 
         // 初始化
+        loadImage();
         updateTimer();
         
         // 每秒更新
