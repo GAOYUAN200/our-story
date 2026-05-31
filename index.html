@@ -124,6 +124,7 @@
         .photo-container {
             margin-bottom: 25px;
             flex-shrink: 0;
+            position: relative;
         }
 
         .couple-photo {
@@ -137,11 +138,46 @@
             background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(167, 139, 250, 0.1));
             mask-image: radial-gradient(circle at center, black 0%, black 80%, transparent 100%);
             -webkit-mask-image: radial-gradient(circle at center, black 0%, black 80%, transparent 100%);
+            cursor: pointer;
         }
 
         .couple-photo:hover {
             transform: scale(1.05) translateY(-8px);
             box-shadow: 0 30px 80px rgba(236, 72, 153, 0.35);
+        }
+
+        /* 播放按钮覆盖层 */
+        .play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: rgba(236, 72, 153, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .couple-photo:hover ~ .play-overlay,
+        .play-overlay:hover {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .play-icon {
+            width: 0;
+            height: 0;
+            border-left: 18px solid white;
+            border-top: 12px solid transparent;
+            border-bottom: 12px solid transparent;
+            margin-left: 4px;
         }
 
         /* 文字部分 */
@@ -262,6 +298,81 @@
             font-weight: 500;
         }
 
+        /* 视频播放器模态框 */
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        .video-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .video-container {
+            position: relative;
+            width: 90%;
+            max-width: 800px;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .video-player {
+            width: 100%;
+            max-height: 80vh;
+            border-radius: 16px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
         /* 响应式设计 */
         @media (max-width: 480px) {
             .container {
@@ -316,6 +427,11 @@
 
             .time-unit {
                 padding: 10px 6px;
+                border-radius: 12px;
+            }
+
+            .video-container {
+                width: 95%;
                 border-radius: 12px;
             }
         }
@@ -432,6 +548,9 @@
                  alt="陆韦彬和高原的合影" 
                  class="couple-photo"
                  onerror="handleImageError()">
+            <div class="play-overlay">
+                <div class="play-icon"></div>
+            </div>
         </div>
 
         <!-- 标题 -->
@@ -472,13 +591,25 @@
         </p>
     </div>
 
+    <!-- 视频播放模态框 -->
+    <div id="videoModal" class="video-modal">
+        <button class="close-btn" onclick="closeVideo()">✕</button>
+        <div class="video-container">
+            <video id="videoPlayer" class="video-player" controls>
+                <source src="https://raw.githubusercontent.com/GAOYUAN200/our-story/main/6cadedd71ee8db5dbc0bcbb801844246_raw.mp4" type="video/mp4">
+                <source src="https://ghproxy.com/https://raw.githubusercontent.com/GAOYUAN200/our-story/main/6cadedd71ee8db5dbc0bcbb801844246_raw.mp4" type="video/mp4">
+                你的浏览器不支持视频播放。
+            </video>
+        </div>
+    </div>
+
     <script>
         // 国内 CDN 镜像列表（支持中国访问）
         const imageUrls = [
             'https://ghproxy.com/https://raw.githubusercontent.com/GAOYUAN200/our-story/main/1ee8ea1eedae471666d7a9b6961ce1b7.jpg',
             'https://raw.fastgit.org/GAOYUAN200/our-story/main/1ee8ea1eedae471666d7a9b6961ce1b7.jpg',
             'https://raw.githubusercontent.com/GAOYUAN200/our-story/main/1ee8ea1eedae471666d7a9b6961ce1b7.jpg',
-            'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"%3E%3Crect fill="%23432d6e" width="240" height="240"/%3E%3Ccircle cx="120" cy="120" r="100" fill="%236b7280" opacity="0.2"/%3E%3C/svg%3E'
+            'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240"%3E%3Crect fill="%23432d6e" width="240" height="240"/%3E%3Ccircle cx="120" cy="120" r="100" fill="%2370c000" opacity="0.1"/%3E%3C/svg%3E',
         ];
 
         let currentImageIndex = 0;
@@ -504,6 +635,40 @@
                 event.preventDefault();
             }
         }, { passive: false });
+
+        // 图片点击事件 - 打开视频播放器
+        document.getElementById('couplePhoto').addEventListener('click', function() {
+            openVideo();
+        });
+
+        function openVideo() {
+            const modal = document.getElementById('videoModal');
+            const video = document.getElementById('videoPlayer');
+            modal.classList.add('active');
+            video.play();
+        }
+
+        function closeVideo() {
+            const modal = document.getElementById('videoModal');
+            const video = document.getElementById('videoPlayer');
+            modal.classList.remove('active');
+            video.pause();
+            video.currentTime = 0;
+        }
+
+        // 点击模态框背景关闭视频
+        document.getElementById('videoModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeVideo();
+            }
+        });
+
+        // ESC 键关闭视频
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeVideo();
+            }
+        });
 
         // 起始时间（北京时间 2025年10月5日 23:23）
         const startDate = new Date(2025, 9, 5, 23, 23, 0).getTime();
